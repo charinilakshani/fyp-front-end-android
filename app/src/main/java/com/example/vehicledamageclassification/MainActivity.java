@@ -19,7 +19,17 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.vehicledamageclassification.Client.ApiClient;
+import com.example.vehicledamageclassification.Model.sendDetails;
+import com.example.vehicledamageclassification.Service.imageService;
+
+import org.json.JSONObject;
+
 import java.io.IOException;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener {
     private TextView result;
@@ -111,11 +121,35 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private  void uploadImage(){
 
         String path = getPath(filePath);
+        final sendDetails sendData =new sendDetails();
+        sendData.setImage(path);
 
+        imageService userService = ApiClient.getClient().create(imageService.class);
+        Call<JSONObject> call = userService.CreateUser(sendData);
 
+        call.enqueue(new Callback<JSONObject>() {
+            @Override
+            public void onResponse(Call<JSONObject> call, Response<JSONObject> response) {
+                if (response.isSuccessful()) {
 
-        System.out.print("image path"+ path);
-        Toast.makeText(this,"Image upload susssful",Toast.LENGTH_LONG).show();
+                    JSONObject nnn = response.body();
+                    System.out.print("responce" + nnn);
+
+                } else {
+                    try {
+                        Toast.makeText(getApplicationContext(), response.errorBody().string(), Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<JSONObject> call, Throwable t) {
+
+            }
+        });
+
     }
 //    cjjcjjcjc
 

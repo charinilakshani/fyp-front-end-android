@@ -13,6 +13,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -25,11 +26,16 @@ import com.example.vehicledamageclassification.Service.imageService;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener {
     private TextView result;
@@ -39,6 +45,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private  static  final int PICK_IMAGE_REQUST =22;
     private Uri filePath;
     private Bitmap bitmap;
+    String encodedImage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +57,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
 
     private  void  init(){
         result =(TextView) findViewById(R.id.txt_result);
-        image =(ImageView) findViewById(R.id.image) ;
+        image =(ImageView) findViewById(R.id.image);
 
         btn_choose =(Button) findViewById(R.id.btn_choose);
         btn_upload =(Button) findViewById(R.id.btn_upload);
@@ -91,12 +98,22 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
 
         if(requestCode ==PICK_IMAGE_REQUST && resultCode == RESULT_OK && data != null && data.getData() != null){
             filePath = data.getData();
+
             try {
                 bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), filePath);
                 image.setImageBitmap(bitmap);
             }catch (IOException e){
 
             }
+
+//            image.setImageBitmap(bitmap);
+//            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+//            byte[] byteArrayImage = byteArrayOutputStream.toByteArray();
+//            encodedImage = Base64.encodeToString(byteArrayImage, Base64.DEFAULT);
+//            System.out.println(" get image" + encodedImage);
+
+//            new uploadImage().execute();
         }
     }
 
@@ -120,9 +137,16 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
 
     private  void uploadImage(){
 
-        String path = getPath(filePath);
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        byte[] imageBytes = baos.toByteArray();
+        String encodedImage = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+        System.out.print("encode Image" + encodedImage);
+
+
+
         final sendDetails sendData =new sendDetails();
-        sendData.setImage(path);
+        sendData.setImage(encodedImage);
 
         imageService userService = ApiClient.getClient().create(imageService.class);
         Call<JSONObject> call = userService.CreateUser(sendData);
